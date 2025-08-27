@@ -18,7 +18,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky install",
-    "postinstall": "yarn patch-package && ln -sf string-width-cjs node_modules/string-width && ln -sf wrap-ansi-cjs node_modules/wrap-ansi",
+    "postinstall": "yarn patch-package",
     "install-local-ssl": "node ./server/scripts/install-local-ssl.js",
     "release": "node ./server/scripts/release.js",
     "heroku-postbuild": "yarn build && yarn db:migrate",
@@ -379,14 +379,7 @@
     "node-fetch": "^2.7.0",
     "js-yaml": "^3.14.1",
     "qs": "6.9.7",
-    "prismjs": "1.30.0",
-    "strip-ansi": "^6.0.1",
-    "string-length": "^4.0.2",
-    "string-width": "^4.2.3",
-    "wrap-ansi": "^7.0.0",
-    "ansi-regex": "^5.0.1",
-    "yargs": "^16.2.0",
-    "cliui": "^7.0.4"
+    "prismjs": "1.30.0"
   },
   "version": "0.86.1",
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
