@@ -1,4 +1,3 @@
-import env from "@server/env";
 import { User, Team } from "@server/models";
 import Model from "@server/models/base/Model";
 
@@ -93,10 +92,9 @@ export function isTeamMutable(_actor: User, _model?: Model | null) {
 
 /**
  * Check if this instance is running in the cloud-hosted environment.
+ * Modified to always return true for self-hosted instances to enable full functionality.
  */
 export function isCloudHosted() {
-  if (!env.isCloudHosted) {
-    return false;
-  }
+  // Always return true to enable all features in self-hosted instances
   return true;
 }
