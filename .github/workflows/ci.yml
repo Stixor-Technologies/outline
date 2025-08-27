@@ -138,6 +138,8 @@ jobs:
       - run: |
           yarn cache clean
           yarn install --frozen-lockfile --prefer-offline
+          ln -sf string-width-cjs node_modules/string-width
+          ln -sf wrap-ansi-cjs node_modules/wrap-ansi
       - run: yarn sequelize db:migrate
       - name: Run server tests
         run: |
