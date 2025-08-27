@@ -35,8 +35,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          build-args: |
-            NODE_VERSION=20.19.4
           tags: |
             ghcr.io/${{ steps.repo.outputs.owner_lowercase }}/outline:${{ steps.ver.outputs.version }}-sanan${{ github.run_number }}
             ghcr.io/${{ steps.repo.outputs.owner_lowercase }}/outline:latest
