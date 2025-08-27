@@ -167,8 +167,11 @@ describe("user model", () => {
 
       const response = await user.availableTeams();
       expect(response.length).toEqual(2);
-      expect(response[0].id).toEqual(user.teamId);
-      expect(response[1].id).toEqual(anotherUser.teamId);
+
+      // Check that both team IDs are present (order may vary)
+      const teamIds = response.map((team) => team.id);
+      expect(teamIds).toContain(user.teamId);
+      expect(teamIds).toContain(anotherUser.teamId);
     });
   });
 

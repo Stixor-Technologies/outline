@@ -79,44 +79,53 @@ describe("Guest User Policies", () => {
         collectionId: collection.id,
       });
 
-      // Give guest explicit read access to the document
-      await document.$add("membership", guest, {
-        through: {
-          permission: DocumentPermission.Read,
-          createdById: guest.id,
-        },
-      });
-
-      // Reload document to get memberships
-      const reloadedDocument = await document.reload({
-        paranoid: false,
-        include: [
-          {
-            association: "memberships",
+      try {
+        // Give guest explicit read access to the document
+        await document.$add("membership", guest, {
+          through: {
+            permission: DocumentPermission.Read,
+            createdById: guest.id,
           },
-          {
-            association: "groupMemberships",
-          },
-        ],
-      });
+        });
 
-      const abilities = serialize(guest, reloadedDocument);
+        // Reload document to get memberships
+        const reloadedDocument = await document.reload({
+          paranoid: false,
+          include: [
+            {
+              association: "memberships",
+            },
+            {
+              association: "groupMemberships",
+            },
+          ],
+        });
 
-      // Guest should have read access when explicitly granted
-      expect(abilities.read).toBe(true);
+        const abilities = serialize(guest, reloadedDocument);
 
-      // But should not have revision/view access (listRevisions and listViews require update permission for guests)
-      expect(abilities.listRevisions).toBe(false);
-      expect(abilities.listViews).toBe(false);
+        // Guest should have read access when explicitly granted
+        expect(abilities.read).toBe(true);
 
-      // Should not be able to share, download (unless team allows), or manage
-      expect(abilities.share).toBe(false);
-      expect(abilities.manageUsers).toBe(false);
-      expect(abilities.createChildDocument).toBe(false);
-      expect(abilities.move).toBe(false);
+        // But should not have revision/view access (listRevisions and listViews require update permission for guests)
+        expect(abilities.listRevisions).toBe(false);
+        expect(abilities.listViews).toBe(false);
 
-      // Commenting should work if guest can read and has no update permission exception
-      expect(abilities.comment).toBe(false); // Guests need update permission to comment
+        // Should not be able to share, download (unless team allows), or manage
+        expect(abilities.share).toBe(false);
+        expect(abilities.manageUsers).toBe(false);
+        expect(abilities.createChildDocument).toBe(false);
+        expect(abilities.move).toBe(false);
+
+        // Commenting should work if guest can read and has no update permission exception
+        expect(abilities.comment).toBe(false); // Guests need update permission to comment
+      } catch (error) {
+        // Clean up in case of errors
+        await document.destroy({ force: true });
+        await collection.destroy({ force: true });
+        await guest.destroy({ force: true });
+        await team.destroy({ force: true });
+        throw error;
+      }
     });
 
     it("should be able to comment and see history when they have update permission", async () => {
@@ -134,40 +143,49 @@ describe("Guest User Policies", () => {
         collectionId: collection.id,
       });
 
-      // Give guest explicit read-write access to the document
-      await document.$add("membership", guest, {
-        through: {
-          permission: DocumentPermission.ReadWrite,
-          createdById: guest.id,
-        },
-      });
-
-      // Reload document to get memberships
-      const reloadedDocument = await document.reload({
-        paranoid: false,
-        include: [
-          {
-            association: "memberships",
+      try {
+        // Give guest explicit read-write access to the document
+        await document.$add("membership", guest, {
+          through: {
+            permission: DocumentPermission.ReadWrite,
+            createdById: guest.id,
           },
-          {
-            association: "groupMemberships",
-          },
-        ],
-      });
+        });
 
-      const abilities = serialize(guest, reloadedDocument);
+        // Reload document to get memberships
+        const reloadedDocument = await document.reload({
+          paranoid: false,
+          include: [
+            {
+              association: "memberships",
+            },
+            {
+              association: "groupMemberships",
+            },
+          ],
+        });
 
-      // With update permission, guests can comment and see history
-      expect(abilities.read).toBe(true);
-      expect(abilities.update).toBe(true);
-      expect(abilities.comment).toBe(true);
-      expect(abilities.listRevisions).toBe(true);
-      expect(abilities.listViews).toBe(true);
+        const abilities = serialize(guest, reloadedDocument);
 
-      // But still restricted from certain actions
-      expect(abilities.createChildDocument).toBe(true); // Can create child docs if can update
-      expect(abilities.manageUsers).toBe(true); // Can manage users if can update
-      expect(abilities.share).toBe(false); // Guest users cannot share
+        // With update permission, guests can comment and see history
+        expect(abilities.read).toBe(true);
+        expect(abilities.update).toBe(true);
+        expect(abilities.comment).toBe(true);
+        expect(abilities.listRevisions).toBe(true);
+        expect(abilities.listViews).toBe(true);
+
+        // But still restricted from certain actions
+        expect(abilities.createChildDocument).toBe(true); // Can create child docs if can update
+        expect(abilities.manageUsers).toBe(true); // Can manage users if can update
+        expect(abilities.share).toBe(false); // Guest users cannot share
+      } catch (error) {
+        // Clean up in case of errors
+        await document.destroy({ force: true });
+        await collection.destroy({ force: true });
+        await guest.destroy({ force: true });
+        await team.destroy({ force: true });
+        throw error;
+      }
     });
   });
 
