@@ -1,0 +1,100 @@
+name: Sync with upstream (manual PR on conflict)
+
+on:
+  schedule: [{ cron: "0 3 * * *" }] # nightly UTC; adjust as you like
+  workflow_dispatch:
+
+permissions:
+  contents: write # push branches / main
+  pull-requests: write # open/update PRs
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false # we'll push with GITHUB_TOKEN
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream & fetch
+        run: |
+          git remote add upstream https://github.com/outline/outline.git || true
+          git fetch upstream
+          git fetch origin
+
+      - name: Try fast-forward main from upstream/main
+        id: ff
+        run: |
+          set -e
+          git checkout main
+          if git merge-base --is-ancestor upstream/main main; then
+            echo "already up to date"
+            echo "RESULT=up-to-date" >> $GITHUB_OUTPUT
+          else
+            # Attempt fast-forward only (no merge commit, no conflicts possible)
+            if git merge --ff-only upstream/main; then
+              echo "fast-forwarded"
+              echo "RESULT=fast-forwarded" >> $GITHUB_OUTPUT
+            else
+              echo "diverged"
+              echo "RESULT=diverged" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Push main if updated
+        if: steps.ff.outputs.RESULT == 'fast-forwarded'
+        run: |
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
+
+      - name: Prepare PR branch (mirror upstream/main)
+        if: steps.ff.outputs.RESULT == 'diverged'
+        run: |
+          # Create/update a branch that matches upstream/main exactly
+          BRANCH="sync/upstream"
+          git checkout -B "$BRANCH" upstream/main
+          git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git "$BRANCH"
+
+      - name: Open or update PR to main
+        if: steps.ff.outputs.RESULT == 'diverged'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const head  = `${owner}:sync/upstream`;
+            const base  = "main";
+            const title = "Upstream sync: merge upstream/main into main";
+            const body  = [
+              "Automated upstream sync created this PR because `main` diverged.",
+              "",
+              "- **Resolve conflicts in this PR** (GitHub will show them below).",
+              "- After merging, your build pipeline can run on `main`.",
+              "",
+              "_This PR branch mirrors `upstream/main` exactly._"
+            ].join("\n");
+
+            // Check if an open PR already exists
+            const prs = await github.rest.pulls.list({
+              owner, repo, state: "open", base, head
+            });
+            if (prs.data.length > 0) {
+              core.info(`PR already open: #${prs.data[0].number}`);
+              // Optionally update title/body
+              await github.rest.pulls.update({
+                owner, repo, pull_number: prs.data[0].number, title, body
+              });
+            } else {
+              const pr = await github.rest.pulls.create({ owner, repo, head, base, title, body });
+              core.info(`Opened PR #${pr.data.number}`);
+            }

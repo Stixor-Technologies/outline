@@ -1,0 +1,35 @@
+# .github/workflows/build-and-push.yml
+name: Build & Push Image
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract upstream version
+        id: ver
+        run: |
+          # Example: read version from package.json; adapt to the Outline repo if needed
+          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/outline:${{ steps.ver.outputs.version }}-sanan${{ github.run_number }}
+            ghcr.io/${{ github.repository_owner }}/outline:latest
