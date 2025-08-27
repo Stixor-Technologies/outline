@@ -31,10 +31,14 @@ jobs:
         run: |
           echo "owner_lowercase=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build & push
         uses: docker/build-push-action@v6
         with:
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/${{ steps.repo.outputs.owner_lowercase }}/outline:${{ steps.ver.outputs.version }}-sanan${{ github.run_number }}
             ghcr.io/${{ steps.repo.outputs.owner_lowercase }}/outline:latest
