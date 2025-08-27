@@ -48,6 +48,9 @@ COPY --from=builder $APP_PATH/.sequelizerc ./.sequelizerc
 COPY --from=builder $APP_PATH/package.json ./package.json
 COPY --from=builder $APP_PATH/node_modules ./node_modules
 
+# Copy built app assets to the location expected by static file serving
+COPY --from=builder $APP_PATH/build/app ./app
+
 # Install wget to healthcheck the server
 RUN  apt-get update \
   && apt-get install -y wget \

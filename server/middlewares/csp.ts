@@ -45,6 +45,7 @@ export default function createCSPMiddleware() {
         defaultSrc,
         styleSrc,
         scriptSrc: [
+          "'self'", // Allow same-origin scripts (including dynamic imports)
           ...uniq(scriptSrc),
           env.DEVELOPMENT_UNSAFE_INLINE_CSP
             ? "'unsafe-inline'"
