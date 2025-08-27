@@ -82,8 +82,8 @@ function UserMenu({ user }: Props) {
 
   const changeRoleActions = React.useMemo(
     () =>
-      [UserRole.Admin, UserRole.Member, UserRole.Viewer].map((role) =>
-        updateUserRoleActionFactory(user, role)
+      [UserRole.Admin, UserRole.Member, UserRole.Viewer, UserRole.Guest].map(
+        (role) => updateUserRoleActionFactory(user, role)
       ),
     [user]
   );

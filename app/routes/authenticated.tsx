@@ -9,6 +9,7 @@ import PlaceholderDocument from "~/components/PlaceholderDocument";
 import Route from "~/components/ProfiledRoute";
 import WebsocketProvider from "~/components/WebsocketProvider";
 import useCurrentTeam from "~/hooks/useCurrentTeam";
+import useCurrentUser from "~/hooks/useCurrentUser";
 import usePolicy from "~/hooks/usePolicy";
 import lazy from "~/utils/lazyWithRetry";
 import {
@@ -48,6 +49,7 @@ const RedirectDocument = ({
  */
 function AuthenticatedRoutes() {
   const team = useCurrentTeam();
+  const user = useCurrentUser();
   const can = usePolicy(team);
 
   return (
@@ -62,13 +64,13 @@ function AuthenticatedRoutes() {
             }
           >
             <Switch>
-              {can.createDocument && (
+              {can.createDocument && !user.isGuest && (
                 <Route exact path={draftsPath()} component={Drafts} />
               )}
-              {can.createDocument && (
+              {can.createDocument && !user.isGuest && (
                 <Route exact path={archivePath()} component={Archive} />
               )}
-              {can.createDocument && (
+              {can.createDocument && !user.isGuest && (
                 <Route exact path={trashPath()} component={Trash} />
               )}
               <Route path={`${homePath()}/:tab?`} component={Home} />
