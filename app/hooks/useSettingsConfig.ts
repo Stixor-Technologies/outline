@@ -94,7 +94,7 @@ const useSettingsConfig = () => {
         path: settingsPath("notifications"),
         component: Notifications.Component,
         preload: Notifications.preload,
-        enabled: true,
+        enabled: !user.isGuest, // Disable for guests
         group: t("Account"),
         icon: EmailIcon,
       },
@@ -103,7 +103,7 @@ const useSettingsConfig = () => {
         path: settingsPath("api-and-apps"),
         component: APIAndApps.Component,
         preload: APIAndApps.preload,
-        enabled: true,
+        enabled: !user.isGuest, // Disable for guests
         group: t("Account"),
         icon: PadlockIcon,
       },

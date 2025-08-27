@@ -293,15 +293,19 @@ class User extends ParanoidModel<
   }
 
   get defaultCollectionPermission(): CollectionPermission {
-    return this.isViewer
-      ? CollectionPermission.Read
-      : CollectionPermission.ReadWrite;
+    // Guests get read-only permissions by default
+    if (this.isGuest) {
+      return CollectionPermission.Read;
+    }
+    return CollectionPermission.ReadWrite;
   }
 
   get defaultDocumentPermission(): DocumentPermission {
-    return this.isViewer
-      ? DocumentPermission.Read
-      : DocumentPermission.ReadWrite;
+    // Guests get read-only permissions by default
+    if (this.isGuest) {
+      return DocumentPermission.Read;
+    }
+    return DocumentPermission.ReadWrite;
   }
 
   /**

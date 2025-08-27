@@ -157,6 +157,12 @@ function Invite({ onSubmit }: Props) {
         description: t("Can view and comment"),
         value: UserRole.Viewer,
       },
+      {
+        type: "item",
+        label: t("Guest"),
+        description: t("Can only view documents that are explicitly shared"),
+        value: UserRole.Guest,
+      },
     ];
   }, [t, user]);
 
