@@ -70,6 +70,11 @@ describe("Guest User Policies", () => {
         role: UserRole.Guest,
         teamId: team.id,
       });
+      // Create a dummy collection first to avoid "last collection" constraint
+      await buildCollection({
+        teamId: team.id,
+        permission: CollectionPermission.ReadWrite,
+      });
       const collection = await buildCollection({
         teamId: team.id,
         permission: null, // Private collection
@@ -79,53 +84,44 @@ describe("Guest User Policies", () => {
         collectionId: collection.id,
       });
 
-      try {
-        // Give guest explicit read access to the document
-        await document.$add("membership", guest, {
-          through: {
-            permission: DocumentPermission.Read,
-            createdById: guest.id,
+      // Give guest explicit read access to the document
+      await document.$add("membership", guest, {
+        through: {
+          permission: DocumentPermission.Read,
+          createdById: guest.id,
+        },
+      });
+
+      // Reload document to get memberships
+      const reloadedDocument = await document.reload({
+        paranoid: false,
+        include: [
+          {
+            association: "memberships",
           },
-        });
+          {
+            association: "groupMemberships",
+          },
+        ],
+      });
 
-        // Reload document to get memberships
-        const reloadedDocument = await document.reload({
-          paranoid: false,
-          include: [
-            {
-              association: "memberships",
-            },
-            {
-              association: "groupMemberships",
-            },
-          ],
-        });
+      const abilities = serialize(guest, reloadedDocument);
 
-        const abilities = serialize(guest, reloadedDocument);
+      // Guest should have read access when explicitly granted
+      expect(abilities.read).toBe(true);
 
-        // Guest should have read access when explicitly granted
-        expect(abilities.read).toBe(true);
+      // But should not have revision/view access (listRevisions and listViews require update permission for guests)
+      expect(abilities.listRevisions).toBe(false);
+      expect(abilities.listViews).toBe(false);
 
-        // But should not have revision/view access (listRevisions and listViews require update permission for guests)
-        expect(abilities.listRevisions).toBe(false);
-        expect(abilities.listViews).toBe(false);
+      // Should not be able to share, download (unless team allows), or manage
+      expect(abilities.share).toBe(false);
+      expect(abilities.manageUsers).toBe(false);
+      expect(abilities.createChildDocument).toBe(false);
+      expect(abilities.move).toBe(false);
 
-        // Should not be able to share, download (unless team allows), or manage
-        expect(abilities.share).toBe(false);
-        expect(abilities.manageUsers).toBe(false);
-        expect(abilities.createChildDocument).toBe(false);
-        expect(abilities.move).toBe(false);
-
-        // Commenting should work if guest can read and has no update permission exception
-        expect(abilities.comment).toBe(false); // Guests need update permission to comment
-      } catch (error) {
-        // Clean up in case of errors
-        await document.destroy({ force: true });
-        await collection.destroy({ force: true });
-        await guest.destroy({ force: true });
-        await team.destroy({ force: true });
-        throw error;
-      }
+      // Commenting should work if guest can read and has no update permission exception
+      expect(abilities.comment).toBe(false); // Guests need update permission to comment
     });
 
     it("should be able to comment and see history when they have update permission", async () => {
@@ -134,6 +130,11 @@ describe("Guest User Policies", () => {
         role: UserRole.Guest,
         teamId: team.id,
       });
+      // Create a dummy collection first to avoid "last collection" constraint
+      await buildCollection({
+        teamId: team.id,
+        permission: CollectionPermission.ReadWrite,
+      });
       const collection = await buildCollection({
         teamId: team.id,
         permission: null, // Private collection
@@ -143,49 +144,40 @@ describe("Guest User Policies", () => {
         collectionId: collection.id,
       });
 
-      try {
-        // Give guest explicit read-write access to the document
-        await document.$add("membership", guest, {
-          through: {
-            permission: DocumentPermission.ReadWrite,
-            createdById: guest.id,
+      // Give guest explicit read-write access to the document
+      await document.$add("membership", guest, {
+        through: {
+          permission: DocumentPermission.ReadWrite,
+          createdById: guest.id,
+        },
+      });
+
+      // Reload document to get memberships
+      const reloadedDocument = await document.reload({
+        paranoid: false,
+        include: [
+          {
+            association: "memberships",
           },
-        });
+          {
+            association: "groupMemberships",
+          },
+        ],
+      });
 
-        // Reload document to get memberships
-        const reloadedDocument = await document.reload({
-          paranoid: false,
-          include: [
-            {
-              association: "memberships",
-            },
-            {
-              association: "groupMemberships",
-            },
-          ],
-        });
+      const abilities = serialize(guest, reloadedDocument);
 
-        const abilities = serialize(guest, reloadedDocument);
+      // With update permission, guests can comment and see history
+      expect(abilities.read).toBe(true);
+      expect(abilities.update).toBe(true);
+      expect(abilities.comment).toBe(true);
+      expect(abilities.listRevisions).toBe(true);
+      expect(abilities.listViews).toBe(true);
 
-        // With update permission, guests can comment and see history
-        expect(abilities.read).toBe(true);
-        expect(abilities.update).toBe(true);
-        expect(abilities.comment).toBe(true);
-        expect(abilities.listRevisions).toBe(true);
-        expect(abilities.listViews).toBe(true);
-
-        // But still restricted from certain actions
-        expect(abilities.createChildDocument).toBe(true); // Can create child docs if can update
-        expect(abilities.manageUsers).toBe(true); // Can manage users if can update
-        expect(abilities.share).toBe(false); // Guest users cannot share
-      } catch (error) {
-        // Clean up in case of errors
-        await document.destroy({ force: true });
-        await collection.destroy({ force: true });
-        await guest.destroy({ force: true });
-        await team.destroy({ force: true });
-        throw error;
-      }
+      // But still restricted from certain actions
+      expect(abilities.createChildDocument).toBe(true); // Can create child docs if can update
+      expect(abilities.manageUsers).toBe(true); // Can manage users if can update
+      expect(abilities.share).toBe(false); // Guest users cannot share
     });
   });
 
