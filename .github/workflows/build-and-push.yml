@@ -26,10 +26,15 @@ jobs:
           # Example: read version from package.json; adapt to the Outline repo if needed
           echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
 
+      - name: Set lowercase repository owner
+        id: repo
+        run: |
+          echo "owner_lowercase=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Build & push
         uses: docker/build-push-action@v6
         with:
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/outline:${{ steps.ver.outputs.version }}-sanan${{ github.run_number }}
-            ghcr.io/${{ github.repository_owner }}/outline:latest
+            ghcr.io/${{ steps.repo.outputs.owner_lowercase }}/outline:${{ steps.ver.outputs.version }}-sanan${{ github.run_number }}
+            ghcr.io/${{ steps.repo.outputs.owner_lowercase }}/outline:latest
