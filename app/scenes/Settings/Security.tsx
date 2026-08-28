@@ -46,6 +46,11 @@ function Security() {
           label: t("Viewer"),
           value: "viewer",
         },
+        {
+          type: "item",
+          label: t("Guest"),
+          value: "guest",
+        },
       ] satisfies Option[],
     [t]
   );

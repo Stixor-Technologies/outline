@@ -953,6 +953,7 @@
   "Can manage all workspace settings": "Can manage all workspace settings",
   "Can create, edit, and delete documents": "Can create, edit, and delete documents",
   "Can view and comment": "Can view and comment",
+  "Can only view documents that are explicitly shared": "Can only view documents that are explicitly shared",
   "Invite people to join your workspace. They can sign in with {{signinMethods}} or use their email address.": "Invite people to join your workspace. They can sign in with {{signinMethods}} or use their email address.",
   "Invite members to join your workspace. They will need to sign in with {{signinMethods}}.": "Invite members to join your workspace. They will need to sign in with {{signinMethods}}.",
   "As an admin you can also <2>enable email sign-in</2>.": "As an admin you can also <2>enable email sign-in</2>.",
