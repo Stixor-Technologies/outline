@@ -26,7 +26,7 @@ RUN yarn workspaces focus --production && \
   yarn cache clean
 
 # ---
-FROM node:26.3.0-slim AS runner
+FROM node:24.22.1-slim AS runner
 
 LABEL org.opencontainers.image.source="https://github.com/outline/outline"
 
